@@ -127,6 +127,7 @@ const useAuthStore = create(
 
         try {
           const cred = await signInWithEmailAndPassword(auth, email, password)
+          set({ loading: false })
           return cred.user
         } catch (e) {
           set({ error: e.message, loading: false })
@@ -149,6 +150,7 @@ const useAuthStore = create(
           const cred = await createUserWithEmailAndPassword(auth, email, password)
           await updateProfile(cred.user, { displayName })
           await get().createProfile(cred.user.uid, { displayName, email })
+          set({ loading: false })
           return cred.user
         } catch (e) {
           set({ error: e.message, loading: false })
@@ -179,6 +181,7 @@ const useAuthStore = create(
               email: cred.user.email,
             })
           }
+          set({ loading: false })
           return cred.user
         } catch (e) {
           set({ error: e.message, loading: false })
@@ -204,6 +207,7 @@ const useAuthStore = create(
             email: null,
             role: 'guest',
           })
+          set({ loading: false })
           return cred.user
         } catch (e) {
           set({ error: e.message, loading: false })

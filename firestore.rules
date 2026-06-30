@@ -12,15 +12,17 @@ service cloud.firestore {
     }
 
     function getUserData() {
-      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+      let path = /databases/$(database)/documents/users/$(request.auth.uid);
+      return exists(path) ? get(path) : null;
     }
 
     function hasRole(role) {
-      return getUserData().role == role || getUserData().role == 'admin';
+      let userDoc = getUserData();
+      return userDoc != null && 'role' in userDoc.data && (userDoc.data.role == role || userDoc.data.role == 'admin');
     }
 
     function isAuthority() {
-      return hasRole('authority');
+      return isSignedIn() && hasRole('authority');
     }
 
     // ── Issues ────────────────────────────────────────────────────
