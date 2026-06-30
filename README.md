@@ -312,20 +312,6 @@ firebase deploy --only firestore:rules
 
 ---
 
-## 📊 Evaluation Criteria Mapping
-
-| Criterion | Implementation |
-|-----------|---------------|
-| **Problem Solving & Impact (20%)** | Transparent lifecycle tracking, HITL accountability, SLA enforcement, AI auto-routing to correct municipal dept |
-| **Agentic Depth (20%)** | 6-node LangGraph graph · Judge agent with self-correction loop (3 retries) · HITL bridge · Pub/Sub decoupling · State machine transitions |
-| **Innovation & Creativity (20%)** | PixelRAG visual dedup · Gemini predictive insights · 7-tier gamification · Rank progression · Community verification ring |
-| **Google Technologies (15%)** | Gemini 1.5 Pro · Vertex AI embeddings · Firebase (Auth/Firestore/Storage/FCM/Hosting) · Cloud Run · Cloud Pub/Sub · Secret Manager · Google Maps API |
-| **Product Design (10%)** | Dark glassmorphism UI · CSS animation system · Leaflet map explorer · Responsive PWA · Install banner |
-| **Technical Implementation (10%)** | LangGraph TypedDict state · Pydantic validation · Firestore security rules · Workbox service worker · Zero-dependency build |
-| **Completeness (5%)** | 10 fully working pages · E2E flow from report → HITL → resolve · Health check · Error boundary · 404 page |
-
----
-
 ## 🔮 Future Enhancements
 
 - [ ] Cloud Function triggers for XP awards (real-time, server-side)
@@ -341,3 +327,5 @@ firebase deploy --only firestore:rules
 ## 👥 Team
 
 Built for **Hackathon — Prastab Challenge** 🏛️
+
+made by - https://www.dayananddarpan.in/
