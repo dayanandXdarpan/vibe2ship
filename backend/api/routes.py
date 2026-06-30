@@ -4,10 +4,12 @@ FastAPI Routes — Prastab Backend API
 All routes trigger the LangGraph multi-agent pipeline
 and return structured responses to the React frontend.
 """
-from fastapi import FastAPI, UploadFile, File, Form, HTTPException, BackgroundTasks, Depends, Request
+from fastapi import FastAPI, UploadFile, File, Form, HTTPException, BackgroundTasks, Depends, Request, Security, status, Header
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from firebase_admin import firestore as fs_module
+from firebase_admin import auth as firebase_auth
 import logging
 import uuid
 from datetime import datetime
@@ -23,6 +25,64 @@ from api.models import (
 
 logger = logging.getLogger(__name__)
 settings = get_settings()
+
+security = HTTPBearer()
+
+async def verify_token(credentials: HTTPAuthorizationCredentials = Depends(security)) -> dict:
+    """
+    FastAPI dependency to verify Firebase ID tokens.
+    Extracts the user info from JWT. Supports dummy tokens in development environment.
+    """
+    token = credentials.credentials
+    if settings.app_env == "development" and token.startswith("dummy-token-"):
+        role = token.split("-")[-1]  # citizen, authority, admin, guest
+        uid = f"dev-user-{role}"
+        return {
+            "uid": uid,
+            "email": f"{role}@prastab.dev",
+            "name": f"Dev {role.capitalize()}",
+            "role": role
+        }
+    
+    try:
+        decoded_token = firebase_auth.verify_id_token(token)
+        return decoded_token
+    except Exception as e:
+        logger.error(f"[AUTH] Token verification failed: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid or expired authentication token",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+async def verify_authority_role(decoded_token: dict = Depends(verify_token)) -> dict:
+    """
+    FastAPI dependency to check if the user has an authority or admin role.
+    """
+    uid = decoded_token["uid"]
+    role = decoded_token.get("role")
+    
+    if not role:
+        try:
+            from services.firestore_client import get_firestore_client
+            db = get_firestore_client()
+            user_doc = db.collection("users").document(uid).get()
+            if user_doc.exists:
+                role = user_doc.to_dict().get("role", "citizen")
+            else:
+                role = "citizen"
+        except Exception as e:
+            logger.error(f"[AUTH] Failed to fetch user role from Firestore for {uid}: {e}")
+            role = "citizen"
+            
+    if role not in ("authority", "admin"):
+        logger.warning(f"[AUTH] Access denied: User {uid} has role '{role}'")
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Access denied: authority privilege required"
+        )
+    decoded_token["role"] = role
+    return decoded_token
 
 # ─────────────────────────────────────────────
 # FastAPI App
@@ -46,9 +106,60 @@ app.add_middleware(
 )
 
 # ─────────────────────────────────────────────
-# In-memory job tracker (replace with Firestore in prod)
+# Durable Job Store (Firestore-backed with in-memory cache)
+# Survives Cloud Run restarts and horizontal scale-out
 # ─────────────────────────────────────────────
-pipeline_jobs: dict[str, dict] = {}
+
+class FirestoreJobStore:
+    """
+    Dual-layer job tracker: writes to both memory (fast reads)
+    and Firestore (durability across restarts).
+    Falls back to memory-only if Firestore is unavailable.
+    """
+    def __init__(self):
+        self._mem: dict[str, dict] = {}
+
+    def __contains__(self, key):
+        return key in self._mem
+
+    def get(self, key, default=None):
+        if key in self._mem:
+            return self._mem[key]
+        # Firestore fallback on cache miss
+        try:
+            from services.firestore_client import get_firestore_client
+            db = get_firestore_client()
+            doc = db.collection("_pipeline_jobs").document(key).get()
+            if doc.exists:
+                self._mem[key] = doc.to_dict()
+                return self._mem[key]
+        except Exception:
+            pass
+        return default
+
+    def __setitem__(self, key, value):
+        self._mem[key] = value
+        try:
+            from services.firestore_client import get_firestore_client
+            db = get_firestore_client()
+            db.collection("_pipeline_jobs").document(key).set(value)
+        except Exception as e:
+            logger.debug(f"[JobStore] Firestore write skipped: {e}")
+
+    def __getitem__(self, key):
+        result = self.get(key)
+        if result is None:
+            raise KeyError(key)
+        return result
+
+    def update(self, key: str, fields: dict):
+        """Merge partial field updates into existing job record."""
+        existing = self.get(key) or {}
+        existing.update(fields)
+        self[key] = existing  # triggers __setitem__ → Firestore write
+
+
+pipeline_jobs = FirestoreJobStore()
 
 
 # ─────────────────────────────────────────────
@@ -59,7 +170,7 @@ from datetime import datetime, timedelta
 # In-memory IP rate limiter for IP-based spam prevention
 ip_rate_limits: dict[str, list[datetime]] = {}
 
-async def check_rate_limit(request: Request, user_id: str = Form(...)):
+async def check_rate_limit(request: Request, user_id: str):
     # 1. User ID rate limiting (Firestore backed)
     from services.firestore_client import get_firestore_client
     db = get_firestore_client()
@@ -142,11 +253,10 @@ async def report_issue(
     image_url: str = Form(...),
     lat: float = Form(...),
     lng: float = Form(...),
-    user_id: str = Form(...),
     user_description: Optional[str] = Form(None),
     voice_note_b64: Optional[str] = Form(None),    # base64 audio blob from MediaRecorder
     voice_note_mime: Optional[str] = Form(None),   # e.g. "audio/webm;codecs=opus"
-    rate_limit: None = Depends(check_rate_limit)
+    decoded_token: dict = Depends(verify_token)
 ):
     """
     Trigger the LangGraph multi-agent pipeline for a new issue report.
@@ -155,6 +265,8 @@ async def report_issue(
     Runs agents asynchronously in background.
     Poll /issues/{issue_id}/status for real-time progress.
     """
+    user_id = decoded_token["uid"]
+    await check_rate_limit(request, user_id)
     # ── Initialize Issue Document in Firestore ────────────────
     # Enforces creation using UUID as doc ID before agent pipeline starts
     try:
@@ -203,7 +315,7 @@ async def report_issue(
         from services.state_machine import IssueStatus, apply_transition_to_firestore
         from services.firestore_client import get_firestore_client
         try:
-            pipeline_jobs[issue_id]["status"] = "processing"
+            pipeline_jobs.update(issue_id, {"status": "processing"})
 
             # Pub/Sub: announce new submission
             await publish_issue_submitted(issue_id, user_id, image_url, lat, lng)
@@ -226,27 +338,29 @@ async def report_issue(
                     result.get("severity", 1), result.get("confidence", 0)
                 )
 
-            pipeline_jobs[issue_id]["status"] = result.get("status", "complete")
-            pipeline_jobs[issue_id]["result"] = {
-                "category": result.get("category"),
-                "severity": result.get("severity"),
-                "confidence": result.get("confidence"),
-                "ai_description": result.get("ai_description"),
-                "tags": result.get("tags", []),
-                "geo_address": result.get("geo_address"),
-                "validation_result": result.get("validation_result"),
-                "duplicate_of": result.get("duplicate_of"),
-                "routing_dept": result.get("routing_dept"),
-                "ticket_id": result.get("ticket_id"),
-                "sla_hours": result.get("sla_hours"),
-                "auto_escalate": result.get("auto_escalate"),
-                "needs_clarification": result.get("needs_clarification"),
-                "clarification_message": result.get("clarification_message"),
-                "mem0_context": result.get("mem0_context"),
-                "judge_quality_score": result.get("judge_quality_score"),
-                "judge_requires_hitl": result.get("judge_requires_hitl"),
-                "judge_hitl_reason": result.get("judge_hitl_reason"),
-            }
+            pipeline_jobs.update(issue_id, {
+                "status": result.get("status", "complete"),
+                "result": {
+                    "category": result.get("category"),
+                    "severity": result.get("severity"),
+                    "confidence": result.get("confidence"),
+                    "ai_description": result.get("ai_description"),
+                    "tags": result.get("tags", []),
+                    "geo_address": result.get("geo_address"),
+                    "validation_result": result.get("validation_result"),
+                    "duplicate_of": result.get("duplicate_of"),
+                    "routing_dept": result.get("routing_dept"),
+                    "ticket_id": result.get("ticket_id"),
+                    "sla_hours": result.get("sla_hours"),
+                    "auto_escalate": result.get("auto_escalate"),
+                    "needs_clarification": result.get("needs_clarification"),
+                    "clarification_message": result.get("clarification_message"),
+                    "mem0_context": result.get("mem0_context"),
+                    "judge_quality_score": result.get("judge_quality_score"),
+                    "judge_requires_hitl": result.get("judge_requires_hitl"),
+                    "judge_hitl_reason": result.get("judge_hitl_reason"),
+                }
+            })
 
             # Save the final result to Firestore so it is persistent and visible in feed/detail pages!
             db = get_firestore_client()
@@ -350,8 +464,7 @@ async def report_issue(
 
         except Exception as e:
             logger.error(f"Pipeline error for {issue_id}: {e}")
-            pipeline_jobs[issue_id]["status"] = "error"
-            pipeline_jobs[issue_id]["error"] = str(e)
+            pipeline_jobs.update(issue_id, {"status": "error", "error": str(e)})
             
             # Update Firestore with error status
             try:
@@ -374,7 +487,7 @@ async def report_issue(
 
 
 @app.get("/issues/{issue_id}/status", response_model=IssueStatusResponse)
-async def get_issue_status(issue_id: str):
+async def get_issue_status(issue_id: str, decoded_token: dict = Depends(verify_token)):
     """Poll pipeline status and agent results for a given issue."""
     job = pipeline_jobs.get(issue_id)
     if not job:
@@ -403,7 +516,7 @@ async def get_issue_status(issue_id: str):
 
 
 @app.get("/insights/{ward_id}", response_model=InsightResponse)
-async def get_ward_insights(ward_id: str, limit: int = 5):
+async def get_ward_insights(ward_id: str, limit: int = 5, decoded_token: dict = Depends(verify_token)):
     """
     Generate AI-powered predictive insights for a ward using Mem0 + Gemini.
     """
@@ -484,13 +597,14 @@ async def get_ward_insights(ward_id: str, limit: int = 5):
 
 
 @app.post("/resolve")
-async def resolve_issue(request: ResolveIssueRequest):
+async def resolve_issue(request: ResolveIssueRequest, decoded_token: dict = Depends(verify_authority_role)):
     try:
         from services.firestore_client import get_firestore_client
         from services.state_machine import IssueStatus, apply_transition_to_firestore
         from services.pubsub_service import publish_issue_resolved
         from firebase_admin import firestore as fs_module
 
+        authority_id = decoded_token["uid"]
         db = get_firestore_client()
         issue_ref = db.collection("issues").document(request.issue_id)
         issue = issue_ref.get()
@@ -508,12 +622,12 @@ async def resolve_issue(request: ResolveIssueRequest):
             issue_id=request.issue_id,
             from_status=current_status,
             to_status=IssueStatus.RESOLVED,
-            actor=request.authority_id,
+            actor=authority_id,
             reason=request.resolution_note,
             extra_fields={
                 "resolution_note": request.resolution_note,
                 "resolution_photo_url": request.resolution_photo_url,
-                "resolved_by": request.authority_id,
+                "resolved_by": authority_id,
                 "resolved_at": datetime.utcnow(),
             }
         )
@@ -526,7 +640,7 @@ async def resolve_issue(request: ResolveIssueRequest):
             })
 
         # Pub/Sub: resolution event → triggers gamification
-        await publish_issue_resolved(request.issue_id, request.authority_id, reporter_id or "")
+        await publish_issue_resolved(request.issue_id, authority_id, reporter_id or "")
 
         # Notification to citizen
         db.collection("notifications").add({
@@ -551,17 +665,18 @@ async def resolve_issue(request: ResolveIssueRequest):
 # ── HITL Endpoints ────────────────────────────────────────────────
 
 @app.post("/hitl/approve")
-async def hitl_approve(request: HITLApproveRequest):
+async def hitl_approve(request: HITLApproveRequest, decoded_token: dict = Depends(verify_authority_role)):
     """Human verifier approves AI validation → transitions to VALIDATED."""
     try:
         from services.firestore_client import get_firestore_client
         from agents.judge_agent import hitl_approve as do_approve
 
+        reviewer_id = decoded_token["uid"]
         db = get_firestore_client()
         result = await do_approve(
             db=db,
             issue_id=request.issue_id,
-            reviewer_id=request.reviewer_id,
+            reviewer_id=reviewer_id,
             notes=request.notes or "",
         )
         return result
@@ -573,17 +688,18 @@ async def hitl_approve(request: HITLApproveRequest):
 
 
 @app.post("/hitl/reject")
-async def hitl_reject(request: HITLRejectRequest):
+async def hitl_reject(request: HITLRejectRequest, decoded_token: dict = Depends(verify_authority_role)):
     """Human verifier rejects → transitions to ESCALATED or REJECTED."""
     try:
         from services.firestore_client import get_firestore_client
         from agents.judge_agent import hitl_reject as do_reject
 
+        reviewer_id = decoded_token["uid"]
         db = get_firestore_client()
         result = await do_reject(
             db=db,
             issue_id=request.issue_id,
-            reviewer_id=request.reviewer_id,
+            reviewer_id=reviewer_id,
             reason=request.reason,
             escalate=request.escalate,
         )
@@ -596,7 +712,7 @@ async def hitl_reject(request: HITLRejectRequest):
 
 
 @app.get("/hitl/queue")
-async def get_hitl_queue(ward_id: Optional[str] = None, limit: int = 20):
+async def get_hitl_queue(ward_id: Optional[str] = None, limit: int = 20, decoded_token: dict = Depends(verify_authority_role)):
     """Get all issues awaiting human review (IN_REVIEW status)."""
     try:
         from services.firestore_client import get_firestore_client
@@ -621,7 +737,7 @@ async def get_hitl_queue(ward_id: Optional[str] = None, limit: int = 20):
 # ─────────────────────────────────────────────
 
 @app.post("/issues/{issue_id}/verify")
-async def community_verify(issue_id: str, body: dict):
+async def community_verify(issue_id: str, body: dict, decoded_token: dict = Depends(verify_token)):
     """
     Layer 2 — Community Consensus: Allow citizens near the location to
     Confirm or Dispute an issue. Affects verified_count and trust scores.
@@ -634,7 +750,7 @@ async def community_verify(issue_id: str, body: dict):
         from services.scoring_engine import update_user_credibility
         from agents.validator_agent import haversine_distance
 
-        user_id = body.get("user_id")
+        user_id = decoded_token["uid"]
         action = body.get("action")  # "confirm" or "dispute"
         note = body.get("note", "")
 
@@ -730,7 +846,7 @@ async def community_verify(issue_id: str, body: dict):
 # ─────────────────────────────────────────────
 
 @app.post("/issues/{issue_id}/appeal")
-async def appeal_rejection(issue_id: str, body: dict):
+async def appeal_rejection(issue_id: str, body: dict, decoded_token: dict = Depends(verify_token)):
     """
     Layer 3 — Appeal: Citizens can appeal an AI-rejected report,
     triggering human review (HITL). Prevents AI from being final arbiter.
@@ -741,7 +857,7 @@ async def appeal_rejection(issue_id: str, body: dict):
         from services.firestore_client import get_firestore_client
         from services.state_machine import IssueStatus, apply_transition_to_firestore
 
-        user_id = body.get("user_id")
+        user_id = decoded_token["uid"]
         appeal_reason = body.get("appeal_reason", "").strip()
 
         if not user_id or not appeal_reason:
@@ -802,11 +918,11 @@ async def appeal_rejection(issue_id: str, body: dict):
 
 
 @app.get("/issues/ranked")
-
 async def get_ranked_issues(
     ward_id: Optional[str] = None,
     status_filter: Optional[str] = None,
     limit: int = 50,
+    decoded_token: dict = Depends(verify_token)
 ):
     """
     Return issues sorted by Urgency Weight:
@@ -849,6 +965,7 @@ async def get_hotspots(
     ward_id: Optional[str] = None,
     k: Optional[int] = None,
     min_severity: int = 1,
+    decoded_token: dict = Depends(verify_token)
 ):
     """
     K-Means clustering of active issues to identify Regional Priority Zones.
@@ -962,11 +1079,11 @@ async def reset_monthly_leaderboard(x_admin_key: Optional[str] = Header(None)):
 
 
 @app.post("/fcm/register")
-async def register_fcm_token(body: dict):
+async def register_fcm_token(body: dict, decoded_token: dict = Depends(verify_token)):
     """Register a device FCM token for push notifications."""
     try:
         from services.firestore_client import get_firestore_client
-        user_id = body.get("user_id")
+        user_id = decoded_token["uid"]
         fcm_token = body.get("fcm_token")
         if not user_id or not fcm_token:
             raise HTTPException(status_code=400, detail="user_id and fcm_token required")
@@ -988,7 +1105,7 @@ async def register_fcm_token(body: dict):
 # ─────────────────────────────────────────────
 
 @app.post("/issues/{issue_id}/resolve")
-async def resolve_with_proof(issue_id: str, body: ResolveIssueRequest):
+async def resolve_with_proof(issue_id: str, body: ResolveIssueRequest, decoded_token: dict = Depends(verify_authority_role)):
     """
     Mark an issue as Resolved with mandatory Proof-of-Resolution.
 
@@ -1007,6 +1124,7 @@ async def resolve_with_proof(issue_id: str, body: ResolveIssueRequest):
         from services.proof_of_resolution import verify_resolution_proof
         from services.scoring_engine import update_user_credibility
 
+        authority_id = decoded_token["uid"]
         db = get_firestore_client()
         issue_ref = db.collection("issues").document(issue_id)
         issue_doc = issue_ref.get()
@@ -1043,7 +1161,7 @@ async def resolve_with_proof(issue_id: str, body: ResolveIssueRequest):
         issue_ref.update({
             "resolution_photo_url": after_image_url,
             "resolution_note": body.resolution_note,
-            "resolved_by": body.authority_id,
+            "resolved_by": authority_id,
             "proof_verdict": verdict,
             "proof_confidence": proof.get("confidence"),
             "proof_quality_score": proof.get("quality_score"),
@@ -1060,7 +1178,7 @@ async def resolve_with_proof(issue_id: str, body: ResolveIssueRequest):
                 db, issue_id,
                 current_status,
                 IssueStatus.RESOLVED,
-                actor=body.authority_id,
+                actor=authority_id,
                 reason=f"Proof-of-Resolution verified by Gemini Vision (confidence: {proof.get('confidence', 0):.0%}). {proof.get('verification_note', '')}"
             )
             # Reward the original reporter's credibility
@@ -1081,7 +1199,7 @@ async def resolve_with_proof(issue_id: str, body: ResolveIssueRequest):
                 db, issue_id,
                 IssueStatus(issue_data.get("status", "in_progress")),
                 IssueStatus.IN_PROGRESS,
-                actor=body.authority_id,
+                actor=authority_id,
                 reason=f"Partial resolution detected by AI. {proof.get('remaining_issues', 'Further work required.')}"
             )
             return {
@@ -1133,7 +1251,7 @@ async def startup_event():
 # ─────────────────────────────────────────────
 
 @app.post("/issues/{issue_id}/notify-neighbors")
-async def notify_nearby_users(issue_id: str):
+async def notify_nearby_users(issue_id: str, decoded_token: dict = Depends(verify_token)):
     """
     Broadcast a hyperlocal FCM notification to all verified users
     within 500m of a newly reported high-severity issue.
@@ -1246,7 +1364,7 @@ async def notify_nearby_users(issue_id: str):
 # ─────────────────────────────────────────────
 
 @app.get("/issues/{issue_id}/share-card")
-async def generate_share_card(issue_id: str):
+async def generate_share_card(issue_id: str, decoded_token: dict = Depends(verify_token)):
     """
     Generate a shareable "Before & After" card for resolved issues.
     Returns structured data for the frontend Web Share API.

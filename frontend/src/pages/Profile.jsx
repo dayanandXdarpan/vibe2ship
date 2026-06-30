@@ -29,11 +29,14 @@ const SEV_COLORS = { 5:'#FF4D6D', 4:'#FF8C42', 3:'#FFB347', 2:'#43D9AD', 1:'#64B
 const STATUS_CHIP = { resolved:'chip--success', assigned:'chip--primary', in_progress:'chip--warning', in_review:'chip--warning', processing:'chip--info' }
 
 export default function Profile() {
-  const { user, profile, logout } = useAuthStore()
+  const { user, profile, logout, updateUserProfile } = useAuthStore()
   const navigate = useNavigate()
   const [myIssues, setMyIssues] = useState([])
   const [loading, setLoading] = useState(true)
   const [newBadge, setNewBadge] = useState(null)
+  const [isEditing, setIsEditing] = useState(false)
+  const [editName, setEditName] = useState('')
+  const [saving, setSaving] = useState(false)
 
   useEffect(() => {
     if (!user) return
@@ -66,6 +69,26 @@ export default function Profile() {
     navigate('/')
   }
 
+  const handleEditClick = () => {
+    setEditName(profile?.displayName || user?.displayName || '')
+    setIsEditing(true)
+  }
+
+  const handleSaveProfile = async (e) => {
+    e.preventDefault()
+    if (!editName.trim()) return
+    setSaving(true)
+    try {
+      await updateUserProfile(editName.trim())
+      setIsEditing(false)
+    } catch (err) {
+      console.error("Failed to update profile", err)
+      alert("Failed to update profile: " + err.message)
+    } finally {
+      setSaving(false)
+    }
+  }
+
   if (!profile && !user) return null
 
   const pts = profile?.points || 0
@@ -83,26 +106,54 @@ export default function Profile() {
           <div className="profile-avatar" style={{ background: `${rank.color}22`, color: rank.color }}>
             {rank.icon}
           </div>
-          <div className="profile-info">
-            <h1 className="display-md">{profile?.displayName || user?.displayName || 'Citizen'}</h1>
-            <p className="body-sm" style={{ color: 'var(--text-secondary)' }}>{user?.email}</p>
-            <div className="flex items-center gap-sm" style={{ marginTop: 'var(--space-sm)' }}>
-              <span className="rank-label" style={{ background: `${rank.color}22`, color: rank.color, border: `1px solid ${rank.color}44` }}>
-                {rank.icon} {rank.name}
-              </span>
-              {profile?.role === 'authority' && (
-                <span className="chip chip--warning">Authority</span>
-              )}
-            </div>
-          </div>
-          <div style={{ display: 'flex', gap: 'var(--space-sm)', flexShrink: 0 }}>
-            <button className="btn btn--secondary btn--icon" title="Edit Profile">
-              <Edit2 size={16} />
-            </button>
-            <button className="btn btn--ghost btn--icon" title="Logout" onClick={handleLogout}>
-              <LogOut size={16} />
-            </button>
-          </div>
+          {isEditing ? (
+            <form onSubmit={handleSaveProfile} className="profile-edit-form" style={{ flex: 1, minWidth: '200px' }}>
+              <div className="form-group" style={{ marginBottom: 'var(--space-sm)' }}>
+                <label className="caption" style={{ color: 'var(--text-muted)', marginBottom: '4px', display: 'block' }}>Display Name</label>
+                <input
+                  type="text"
+                  className="form-input"
+                  value={editName}
+                  onChange={(e) => setEditName(e.target.value)}
+                  placeholder="Enter display name"
+                  required
+                  autoFocus
+                  style={{ width: '100%', padding: '8px 12px', background: 'var(--bg-elevated)', border: '1px solid var(--border-subtle)', borderRadius: 'var(--radius-md)', color: 'var(--text-primary)' }}
+                />
+              </div>
+              <div className="flex gap-sm" style={{ marginTop: 'var(--space-md)' }}>
+                <button type="submit" className="btn btn--primary btn--sm" disabled={saving}>
+                  {saving ? 'Saving...' : 'Save'}
+                </button>
+                <button type="button" className="btn btn--ghost btn--sm" onClick={() => setIsEditing(false)} disabled={saving}>
+                  Cancel
+                </button>
+              </div>
+            </form>
+          ) : (
+            <>
+              <div className="profile-info">
+                <h1 className="display-md">{profile?.displayName || user?.displayName || 'Citizen'}</h1>
+                <p className="body-sm" style={{ color: 'var(--text-secondary)' }}>{user?.email}</p>
+                <div className="flex items-center gap-sm" style={{ marginTop: 'var(--space-sm)' }}>
+                  <span className="rank-label" style={{ background: `${rank.color}22`, color: rank.color, border: `1px solid ${rank.color}44` }}>
+                    {rank.icon} {rank.name}
+                  </span>
+                  {profile?.role === 'authority' && (
+                    <span className="chip chip--warning">Authority</span>
+                  )}
+                </div>
+              </div>
+              <div className="profile-actions-container">
+                <button className="btn btn--secondary btn--icon" title="Edit Profile" onClick={handleEditClick}>
+                  <Edit2 size={16} />
+                </button>
+                <button className="btn btn--ghost btn--icon" title="Logout" onClick={handleLogout}>
+                  <LogOut size={16} />
+                </button>
+              </div>
+            </>
+          )}
         </div>
 
         {/* Stats row */}

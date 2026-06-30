@@ -3,8 +3,18 @@
  * Communicates with FastAPI backend + handles FCM token registration.
  */
 import { backendUrl } from '../config'
+import { auth } from './firebase'
 
 const API = backendUrl
+
+async function getAuthHeaders() {
+  const user = auth.currentUser
+  if (user) {
+    const token = await user.getIdToken()
+    return { 'Authorization': `Bearer ${token}` }
+  }
+  return {}
+}
 
 // ── Community Consensus & Appeals ─────────────────────────────────
 
@@ -24,9 +34,14 @@ export async function appealRejection(issueId, userId, appealReason) {
 
 // ── Error helper ──────────────────────────────────────────────────
 async function apiCall(url, options = {}) {
+  const authHeaders = await getAuthHeaders()
   const res = await fetch(url, {
     ...options,
-    headers: { 'Content-Type': 'application/json', ...(options.headers || {}) },
+    headers: { 
+      'Content-Type': 'application/json', 
+      ...authHeaders,
+      ...(options.headers || {}) 
+    },
   })
   if (!res.ok) {
     const err = await res.json().catch(() => ({}))
@@ -47,14 +62,20 @@ export async function reportIssue({ issueId, imageUrl, lat, lng, userId, userDes
   formData.append('image_url', imageUrl)
   formData.append('lat', String(lat))
   formData.append('lng', String(lng))
-  formData.append('user_id', userId)
   if (userDescription) formData.append('user_description', userDescription)
   if (voiceNoteB64) {
     formData.append('voice_note_b64', voiceNoteB64)
     formData.append('voice_note_mime', voiceNoteMime || 'audio/webm')
   }
 
-  const res = await fetch(`${API}/report`, { method: 'POST', body: formData })
+  const authHeaders = await getAuthHeaders()
+  const res = await fetch(`${API}/report`, { 
+    method: 'POST', 
+    body: formData,
+    headers: {
+      ...authHeaders
+    }
+  })
   if (!res.ok) {
     const err = await res.json().catch(() => ({}))
     throw new Error(err.detail || 'Failed to submit issue')
@@ -66,7 +87,12 @@ export async function reportIssue({ issueId, imageUrl, lat, lng, userId, userDes
  * Get current pipeline/issue status.
  */
 export async function getIssueStatus(issueId) {
-  const res = await fetch(`${API}/issues/${issueId}/status`)
+  const authHeaders = await getAuthHeaders()
+  const res = await fetch(`${API}/issues/${issueId}/status`, {
+    headers: {
+      ...authHeaders
+    }
+  })
   if (!res.ok) throw new Error('Status check failed')
   return res.json()
 }
@@ -121,7 +147,12 @@ export async function pollPipelineStatus(issueId, onUpdate, timeoutMs = 90000) {
  */
 export async function getWardInsights(wardId, limit = 5) {
   try {
-    const res = await fetch(`${API}/insights/${wardId}?limit=${limit}`)
+    const authHeaders = await getAuthHeaders()
+    const res = await fetch(`${API}/insights/${wardId}?limit=${limit}`, {
+      headers: {
+        ...authHeaders
+      }
+    })
     if (!res.ok) throw new Error('Insights unavailable')
     return res.json()
   } catch (e) {
@@ -196,7 +227,12 @@ export async function getRankedIssues(wardId = null, limit = 50) {
   try {
     const params = new URLSearchParams({ limit })
     if (wardId) params.set('ward_id', wardId)
-    const res = await fetch(`${API}/issues/ranked?${params}`)
+    const authHeaders = await getAuthHeaders()
+    const res = await fetch(`${API}/issues/ranked?${params}`, {
+      headers: {
+        ...authHeaders
+      }
+    })
     if (!res.ok) throw new Error('Ranked issues unavailable')
     return res.json()
   } catch (e) {
@@ -212,7 +248,12 @@ export async function getHotspots(wardId = null, minSeverity = 1) {
   try {
     const params = new URLSearchParams({ min_severity: minSeverity })
     if (wardId) params.set('ward_id', wardId)
-    const res = await fetch(`${API}/hotspots?${params}`)
+    const authHeaders = await getAuthHeaders()
+    const res = await fetch(`${API}/hotspots?${params}`, {
+      headers: {
+        ...authHeaders
+      }
+    })
     if (!res.ok) throw new Error('Hotspots unavailable')
     return res.json()
   } catch (e) {
@@ -253,7 +294,12 @@ export async function notifyNeighbors(issueId) {
  * Returns before/after URLs, AI-crafted caption, and share text.
  */
 export async function getShareCard(issueId) {
-  const res = await fetch(`${API}/issues/${issueId}/share-card`)
+  const authHeaders = await getAuthHeaders()
+  const res = await fetch(`${API}/issues/${issueId}/share-card`, {
+    headers: {
+      ...authHeaders
+    }
+  })
   if (!res.ok) throw new Error('Share card unavailable')
   return res.json()
 }

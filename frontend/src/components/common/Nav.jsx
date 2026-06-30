@@ -1,5 +1,6 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useState, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import { collection, query, where, onSnapshot } from 'firebase/firestore'
 import { db } from '../../services/firebase'
 import {
@@ -7,18 +8,20 @@ import {
   Plus, Menu, X, Trophy, BarChart2, Home
 } from 'lucide-react'
 import useAuthStore from '../../store/authStore'
+import LanguageSwitcher from './LanguageSwitcher'
 import './Nav.css'
 
-const NAV_LINKS = [
-  { path: '/feed', label: 'Feed', icon: LayoutGrid },
-  { path: '/map', label: 'Map', icon: Map },
-  { path: '/dashboard', label: 'Dashboard', icon: BarChart2 },
-  { path: '/leaderboard', label: 'Leaderboard', icon: Trophy },
+const NAV_LINK_DEFS = [
+  { path: '/feed', tKey: 'nav.feed', icon: LayoutGrid },
+  { path: '/map', tKey: 'nav.map', icon: Map },
+  { path: '/dashboard', tKey: 'nav.dashboard', icon: BarChart2 },
+  { path: '/leaderboard', tKey: 'nav.leaderboard', icon: Trophy },
 ]
 
 export default function Nav() {
   const location = useLocation()
   const navigate = useNavigate()
+  const { t } = useTranslation()
   const { user, profile, logout } = useAuthStore()
   const [mobileOpen, setMobileOpen] = useState(false)
   const [unreadCount, setUnreadCount] = useState(0)
@@ -60,14 +63,14 @@ export default function Nav() {
           {/* Desktop Links */}
           {user && (
             <div className="nav__links hide-mobile">
-              {NAV_LINKS.map(({ path, label, icon: Icon }) => (
+              {NAV_LINK_DEFS.map(({ path, tKey, icon: Icon }) => (
                 <Link
                   key={path}
                   to={path}
                   className={`nav__link ${isActive(path) ? 'nav__link--active' : ''}`}
                 >
                   <Icon size={16} />
-                  <span>{label}</span>
+                  <span>{t(tKey)}</span>
                 </Link>
               ))}
               {profile?.role === 'authority' || profile?.role === 'admin' ? (
@@ -76,7 +79,7 @@ export default function Nav() {
                   className={`nav__link nav__link--authority ${isActive('/authority') ? 'nav__link--active' : ''}`}
                 >
                   <Shield size={16} />
-                  <span>Authority</span>
+                  <span>{t('nav.authority')}</span>
                 </Link>
               ) : null}
             </div>
@@ -86,10 +89,13 @@ export default function Nav() {
           <div className="nav__actions">
             {user ? (
               <>
+                {/* Language switcher */}
+                <LanguageSwitcher />
+
                 {/* Report CTA */}
                 <Link to="/report" className="btn btn--primary btn--sm hide-mobile">
                   <Plus size={15} />
-                  Report Issue
+                  {t('nav.report')}
                 </Link>
 
                 {/* Notifications with live badge */}
@@ -140,7 +146,7 @@ export default function Nav() {
       {/* Mobile Menu */}
       {mobileOpen && user && (
         <div className="nav__mobile-menu animate-slide-up">
-          {NAV_LINKS.map(({ path, label, icon: Icon }) => (
+          {NAV_LINK_DEFS.map(({ path, tKey, icon: Icon }) => (
             <Link
               key={path}
               to={path}
@@ -148,16 +154,26 @@ export default function Nav() {
               onClick={() => setMobileOpen(false)}
             >
               <Icon size={18} />
-              {label}
+              {t(tKey)}
             </Link>
           ))}
+          {(profile?.role === 'authority' || profile?.role === 'admin') && (
+            <Link
+              to="/authority"
+              className={`nav__mobile-link nav__mobile-link--authority ${isActive('/authority') ? 'nav__mobile-link--active' : ''}`}
+              onClick={() => setMobileOpen(false)}
+            >
+              <Shield size={18} />
+              {t('nav.authority')}
+            </Link>
+          )}
           <Link
             to="/report"
             className="btn btn--primary btn--full"
             onClick={() => setMobileOpen(false)}
           >
             <Plus size={16} />
-            Report Issue
+            {t('nav.report')}
           </Link>
           <button onClick={handleLogout} className="nav__mobile-link" style={{ color: 'var(--danger)' }}>
             <LogOut size={18} />

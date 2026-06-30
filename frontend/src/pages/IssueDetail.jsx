@@ -10,7 +10,7 @@ import { collection, onSnapshot, query, orderBy, addDoc, serverTimestamp } from 
 import { db } from '../services/firebase'
 import useIssueStore from '../store/issueStore'
 import useAuthStore from '../store/authStore'
-import { resolveIssue, communityVerify, appealRejection, getShareCard, notifyNeighbors } from '../services/agentApi'
+import { resolveIssue, communityVerify, appealRejection, getShareCard, notifyNeighbors, hitlApprove, hitlReject } from '../services/agentApi'
 import toast from 'react-hot-toast'
 import './IssueDetail.css'
 
@@ -481,11 +481,7 @@ export default function IssueDetail() {
                     className="btn btn--success btn--lg flex-1"
                     onClick={async () => {
                       try {
-                        await fetch('/api/hitl/approve', {
-                          method: 'POST',
-                          headers: { 'Content-Type': 'application/json' },
-                          body: JSON.stringify({ issue_id: issueId, reviewer_id: user.uid, notes: '' })
-                        })
+                        await hitlApprove(issueId, user.uid, 'Approved by authority')
                         toast.success('Issue approved and validated ✅')
                       } catch { toast.error('Approval failed') }
                     }}
@@ -498,11 +494,7 @@ export default function IssueDetail() {
                       const reason = prompt('Reason for rejection:')
                       if (!reason) return
                       try {
-                        await fetch('/api/hitl/reject', {
-                          method: 'POST',
-                          headers: { 'Content-Type': 'application/json' },
-                          body: JSON.stringify({ issue_id: issueId, reviewer_id: user.uid, reason, escalate: false })
-                        })
+                        await hitlReject(issueId, user.uid, reason, false)
                         toast.success('Issue rejected')
                       } catch { toast.error('Rejection failed') }
                     }}
@@ -514,11 +506,7 @@ export default function IssueDetail() {
                     title="Escalate to senior authority"
                     onClick={async () => {
                       try {
-                        await fetch('/api/hitl/reject', {
-                          method: 'POST',
-                          headers: { 'Content-Type': 'application/json' },
-                          body: JSON.stringify({ issue_id: issueId, reviewer_id: user.uid, reason: 'Escalated for higher authority', escalate: true })
-                        })
+                        await hitlReject(issueId, user.uid, 'Escalated for higher authority', true)
                         toast.success('Issue escalated')
                       } catch { toast.error('Escalation failed') }
                     }}

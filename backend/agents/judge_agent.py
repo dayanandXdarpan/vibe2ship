@@ -98,14 +98,26 @@ async def run_judge_agent(state: dict) -> dict:
         user_description=state.get("user_description") or "not provided",
     )
 
+    def clean_and_parse_json(text: str) -> dict:
+        import re
+        text = text.strip()
+        if text.startswith("```"):
+            text = text.split("```")[1]
+            if text.startswith("json"):
+                text = text[4:]
+        match = re.search(r'\{.*\}', text, re.DOTALL)
+        if match:
+            return json.loads(match.group())
+        return json.loads(text)
+
     assessment = {}
     try:
         model = genai.GenerativeModel(
-            "gemini-1.5-flash",
+            "gemini-1.5-pro",
             generation_config={"response_mime_type": "application/json"}
         )
         response = model.generate_content(prompt)
-        assessment = json.loads(response.text)
+        assessment = clean_and_parse_json(response.text)
         logger.info(f"[JUDGE] Score: {assessment.get('quality_score'):.2f}, passes: {assessment.get('passes')}")
     except Exception as e:
         logger.error(f"[JUDGE] Gemini structured output failed: {e}")

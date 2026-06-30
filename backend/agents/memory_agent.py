@@ -53,6 +53,17 @@ async def run_memory_agent(state: dict) -> dict:
     auto_escalate = False
     mem0_context = None
 
+    # ── Load user trust score from Firestore first ────────────────
+    try:
+        from services.firestore_client import get_firestore_client
+        db = get_firestore_client()
+        user_doc = db.collection("users").document(user_id).get()
+        if user_doc.exists:
+            user_trust_score = user_doc.to_dict().get("trustScore", TRUST_SCORE_DEFAULT)
+            logger.info(f"[MEMORY] Loaded user trust score from Firestore: {user_trust_score:.2f}")
+    except Exception as e:
+        logger.warning(f"[MEMORY] Firestore trust score lookup failed: {e}. Falling back to default.")
+
     if client:
         try:
             # ── Recall location history ──────────────────────────
@@ -84,7 +95,10 @@ async def run_memory_agent(state: dict) -> dict:
                 1 for m in user_results
                 if "valid" in m.get("memory", "").lower() or "resolved" in m.get("memory", "").lower()
             )
-            user_trust_score = min(1.0, TRUST_SCORE_DEFAULT + (valid_reports * 0.05))
+            # Only use Mem0 calculation if we didn't get a valid trust score from Firestore
+            if user_trust_score == TRUST_SCORE_DEFAULT:
+                user_trust_score = min(1.0, TRUST_SCORE_DEFAULT + (valid_reports * 0.05))
+                logger.info(f"[MEMORY] Estimated user trust score from Mem0: {user_trust_score:.2f}")
 
             # ── Store this new issue in memory ───────────────────
             client.add(

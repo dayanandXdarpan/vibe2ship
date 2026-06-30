@@ -1,0 +1,151 @@
+/* ============================================================
+   LanguageSwitcher — glassmorphism dark dropdown
+   ============================================================ */
+
+.lang-switcher {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+/* ── Trigger button ── */
+.lang-switcher__trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 10px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  color: var(--text-primary, #f1f5f9);
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease, transform 0.15s ease;
+  white-space: nowrap;
+}
+
+.lang-switcher__trigger:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.22);
+  transform: translateY(-1px);
+}
+
+.lang-switcher__trigger:active {
+  transform: translateY(0);
+}
+
+.lang-switcher__code {
+  font-size: 0.72rem;
+  font-weight: 700;
+  opacity: 0.85;
+}
+
+.lang-switcher__chevron {
+  font-size: 0.7rem;
+  opacity: 0.7;
+  transition: transform 0.25s ease;
+  display: inline-block;
+  line-height: 1;
+}
+
+.lang-switcher__chevron.open {
+  transform: rotate(180deg);
+}
+
+/* ── Dropdown panel ── */
+.lang-switcher__dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  min-width: 168px;
+  background: rgba(15, 18, 30, 0.88);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.45),
+    0 1px 0 rgba(255, 255, 255, 0.06) inset;
+  overflow: hidden;
+  z-index: 9999;
+  padding: 4px;
+}
+
+/* ── Slide-down animation ── */
+@keyframes langDropIn {
+  from {
+    opacity: 0;
+    transform: translateY(-8px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.lang-switcher__dropdown.animate-fade-in {
+  animation: langDropIn 0.2s cubic-bezier(0.22, 0.61, 0.36, 1) both;
+}
+
+/* ── Option buttons ── */
+.lang-switcher__option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 9px 12px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: rgba(241, 245, 249, 0.8);
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+  text-align: left;
+}
+
+.lang-switcher__option:hover {
+  background: rgba(99, 102, 241, 0.18);
+  color: #f1f5f9;
+}
+
+.lang-switcher__option.active {
+  background: rgba(99, 102, 241, 0.25);
+  color: #a5b4fc;
+  font-weight: 700;
+}
+
+.lang-switcher__native {
+  flex: 1;
+  font-family: inherit;
+}
+
+.lang-switcher__check {
+  font-size: 0.8rem;
+  color: #818cf8;
+  font-weight: 800;
+}
+
+/* ── Separator lines between options ── */
+.lang-switcher__option + .lang-switcher__option {
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+/* ── Mobile: full-width on small screens ── */
+@media (max-width: 480px) {
+  .lang-switcher__dropdown {
+    right: auto;
+    left: 0;
+    min-width: 150px;
+  }
+
+  .lang-switcher__trigger {
+    padding: 5px 8px;
+    font-size: 0.75rem;
+  }
+}

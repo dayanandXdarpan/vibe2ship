@@ -166,9 +166,13 @@ export default function AuthorityPortal() {
   }, [tab])
 
   const callHITL = async (endpoint, body) => {
+    const token = await user.getIdToken()
     const res = await fetch(`/api${endpoint}`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
       body: JSON.stringify({ ...body, reviewer_id: user.uid }),
     })
     if (!res.ok) throw new Error(await res.text())
@@ -195,9 +199,13 @@ export default function AuthorityPortal() {
     setProofForms(f => ({ ...f, [issueId]: { ...form, loading: true, result: null } }))
     try {
       const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:8080'
+      const token = await user.getIdToken()
       const res = await fetch(`${backendUrl}/issues/${issueId}/resolve`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
         body: JSON.stringify({
           issue_id: issueId,
           authority_id: user.uid,

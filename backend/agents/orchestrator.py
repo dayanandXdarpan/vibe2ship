@@ -158,19 +158,12 @@ def build_graph():
         return {**state, "retry_count": retry + 1, "needs_clarification": True,
                 "clarification_message": msg, "status": "needs_clarification"}
 
-    def handle_duplicate(state: IssueState) -> IssueState:
+    async def handle_duplicate(state: IssueState) -> IssueState:
         """Credit reporter for spotting a real issue even if duplicate."""
-        import asyncio
         try:
             from services.scoring_engine import update_user_credibility
             from services.firestore_client import get_firestore_client
-            loop = asyncio.new_event_loop()
-            try:
-                loop.run_until_complete(
-                    update_user_credibility(state["user_id"], "DUPLICATE", db=get_firestore_client())
-                )
-            finally:
-                loop.close()
+            await update_user_credibility(state["user_id"], "DUPLICATE", db=get_firestore_client())
         except Exception as e:
             logger.warning(f"Credibility update (duplicate) failed: {e}")
         logger.info(f"[ORCHESTRATOR] Duplicate of {state.get('duplicate_of')}")
@@ -179,23 +172,16 @@ def build_graph():
     def flag_and_proceed(state: IssueState) -> IssueState:
         return {**state, "status": "flagged_for_review", "needs_clarification": False}
 
-    def handle_hitl(state: IssueState) -> IssueState:
+    async def handle_hitl(state: IssueState) -> IssueState:
         """Mark issue as IN_REVIEW for human verifier action."""
-        import asyncio
         from services.pubsub_service import publish_hitl_required
         try:
-            loop = asyncio.new_event_loop()
-            try:
-                loop.run_until_complete(
-                    publish_hitl_required(
-                        issue_id=state["issue_id"],
-                        reason=state.get("judge_hitl_reason", "Manual review required"),
-                        severity=state.get("severity", 1),
-                        confidence=state.get("confidence", 0),
-                    )
-                )
-            finally:
-                loop.close()
+            await publish_hitl_required(
+                issue_id=state["issue_id"],
+                reason=state.get("judge_hitl_reason", "Manual review required"),
+                severity=state.get("severity", 1),
+                confidence=state.get("confidence", 0),
+            )
         except Exception as e:
             logger.warning(f"Pub/Sub HITL publish failed: {e}")
         return {**state, "status": "in_review", "needs_clarification": False}

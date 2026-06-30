@@ -7,3 +7,5 @@ env/
 dist/
 build/
 .DS_Store
+chroma_db/
+*.db

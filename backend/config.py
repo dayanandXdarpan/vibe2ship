@@ -40,6 +40,12 @@ class Settings(BaseSettings):
     duplicate_radius_meters: float = 150.0
     duplicate_visual_threshold: float = 0.88
 
+    # Admin
+    admin_api_key: str = ""   # Used to protect /admin/* endpoints
+
+    # Pub/Sub
+    pubsub_topic: str = "community-hero-events"
+
     class Config:
         env_file = ".env"
         extra = "ignore"

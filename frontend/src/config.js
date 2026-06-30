@@ -14,3 +14,9 @@ export const firebaseConfig = {
 export const googleMapsApiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY
 export const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:8080'
 export const vapidKey = import.meta.env.VITE_VAPID_KEY
+
+export const isMockMode = !firebaseConfig.apiKey || 
+  firebaseConfig.apiKey.includes('your-firebase') || 
+  firebaseConfig.apiKey.includes('mock') ||
+  firebaseConfig.apiKey.startsWith('AIzaSyA12345');
+

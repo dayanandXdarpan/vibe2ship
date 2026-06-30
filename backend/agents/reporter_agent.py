@@ -281,15 +281,34 @@ async def run_reporter_agent(state: dict) -> dict:
             severity = max(severity, 4)
             logger.info(f"[REPORTER] Safety risk detected — severity auto-boosted to {severity}")
 
+        pii_detected = analysis.get("pii_detected", False)
+        image_url = state["image_url"]
+        if pii_detected:
+            try:
+                from services.image_redactor import redact_pii_server_side
+                new_image_url = await redact_pii_server_side(state["issue_id"], image_url)
+                if new_image_url != image_url:
+                    image_url = new_image_url
+                    try:
+                        from services.firestore_client import get_firestore_client
+                        db = get_firestore_client()
+                        db.collection("issues").document(state["issue_id"]).update({"image_url": image_url})
+                        logger.info(f"[REPORTER] Firestore issue document updated with redacted image URL")
+                    except Exception as fe:
+                        logger.warning(f"[REPORTER] Failed to update Firestore with redacted image: {fe}")
+            except Exception as re:
+                logger.error(f"[REPORTER] Server-side redaction failed: {re}")
+
         result = {
             **state,
+            "image_url": image_url,
             "category": category,
             "severity": severity,
             "confidence": analysis.get("confidence", 0.0),
             "ai_description": analysis.get("description", ""),
             "tags": analysis.get("tags", []),
             "suggested_dept": analysis.get("suggested_dept", category_info["dept"]),
-            "pii_detected": analysis.get("pii_detected", False),
+            "pii_detected": pii_detected,
             "pii_flagged_details": analysis.get("pii_flagged_details"),
             "fallback_triage": analysis.get("fallback_triage", False),
             "status": "reporter_complete",
