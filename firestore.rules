@@ -1,0 +1,124 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ── Helper functions ──────────────────────────────────────────
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(uid) {
+      return request.auth.uid == uid;
+    }
+
+    function getUserData() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+
+    function hasRole(role) {
+      return getUserData().role == role || getUserData().role == 'admin';
+    }
+
+    function isAuthority() {
+      return hasRole('authority');
+    }
+
+    // ── Issues ────────────────────────────────────────────────────
+    match /issues/{issueId} {
+      // Anyone signed in can read issues (transparency)
+      allow read: if isSignedIn();
+
+      // Only the owner can create their own issues
+      allow create: if isSignedIn()
+        && request.resource.data.user_id == request.auth.uid
+        && request.resource.data.status in ['draft', 'processing'];
+
+      // Owners can update descriptions; authorities can change status
+      allow update: if isSignedIn() && (
+        // Reporter can update their own (limited fields)
+        (isOwner(resource.data.user_id) &&
+          request.resource.data.diff(resource.data).affectedKeys()
+            .hasOnly(['user_description', 'updated_at'])) ||
+        // Authority can update status, assignment fields
+        isAuthority()
+      );
+
+      // Nobody can delete issues (audit trail preservation)
+      allow delete: if false;
+
+      // ── Subcollections ─────────────────────────────────────────
+      match /comments/{commentId} {
+        allow read: if isSignedIn();
+        allow create: if isSignedIn()
+          && request.resource.data.user_id == request.auth.uid;
+        allow update, delete: if isSignedIn()
+          && isOwner(resource.data.user_id);
+      }
+
+      match /votes/{userId} {
+        allow read: if isSignedIn();
+        allow create: if isSignedIn() && request.auth.uid == userId;
+        allow delete: if false;
+      }
+
+      match /audit_trail/{entryId} {
+        // Read-only for all signed-in users; writes only from backend service account
+        allow read: if isSignedIn();
+        allow write: if false; // Backend writes via Admin SDK (bypasses rules)
+      }
+
+      // Community Confirm/Dispute votes — one per user per issue
+      match /community_votes/{voterId} {
+        allow read: if isSignedIn();
+        // Can only create YOUR OWN vote, and only once (create, not update)
+        allow create: if isSignedIn() && request.auth.uid == voterId
+          && request.resource.data.action in ['confirm', 'dispute']
+          && request.resource.data.user_id == request.auth.uid;
+        allow update, delete: if false; // Votes are immutable
+      }
+
+      // Appeals — reporter can create, authorities can read
+      match /appeals/{appealId} {
+        allow read: if isSignedIn() && (
+          resource.data.user_id == request.auth.uid || isAuthority()
+        );
+        allow create: if isSignedIn()
+          && request.resource.data.user_id == request.auth.uid
+          && request.resource.data.reason.size() >= 10;
+        allow update, delete: if false; // Appeals are immutable records
+      }
+    }
+
+    // ── Users ─────────────────────────────────────────────────────
+    match /users/{userId} {
+      // Users can read their own profile; authorities see all
+      allow read: if isSignedIn() && (
+        isOwner(userId) || isAuthority()
+      );
+
+      // Only the owner creates/updates their profile
+      allow create: if isSignedIn() && isOwner(userId);
+      allow update: if isSignedIn() && isOwner(userId)
+        && !request.resource.data.diff(resource.data).affectedKeys()
+            .hasAny(['role', 'points', 'trustScore']); // Backend controls these
+
+      allow delete: if false;
+    }
+
+    // ── Notifications ──────────────────────────────────────────────
+    match /notifications/{notifId} {
+      allow read: if isSignedIn()
+        && resource.data.user_id == request.auth.uid;
+      allow update: if isSignedIn()
+        && resource.data.user_id == request.auth.uid
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['read']);
+      allow create, delete: if false; // Backend writes only
+    }
+
+    // ── Ward Insights (read-only cache) ───────────────────────────
+    match /ward_insights/{wardId} {
+      allow read: if isSignedIn();
+      allow write: if false; // Backend only
+    }
+  }
+}

@@ -1,0 +1,199 @@
+.lb-page { padding-bottom: var(--space-3xl); }
+
+.lb-my-rank {
+  padding: var(--space-lg) var(--space-xl);
+  border-radius: var(--radius-xl);
+  margin-bottom: var(--space-xl);
+}
+
+.lb-my-avatar {
+  width: 52px; height: 52px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.8rem;
+  border: 2px solid var(--border-emphasis);
+  background: var(--primary-glow);
+  flex-shrink: 0;
+}
+
+.lb-progress-bar {
+  width: 160px; height: 6px;
+  background: var(--bg-elevated);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+}
+.lb-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--primary), var(--success));
+  border-radius: var(--radius-full);
+  transition: width 0.8s ease;
+}
+
+/* Podium */
+.lb-podium {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: var(--space-md);
+  margin-bottom: var(--space-xl);
+}
+
+.lb-podium__place {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-sm);
+  flex: 1;
+  max-width: 160px;
+}
+
+.lb-podium__avatar {
+  width: 48px; height: 48px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.2rem; font-weight: 700;
+  border: 2px solid currentColor;
+}
+
+.lb-podium__bar {
+  width: 100%;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: var(--space-md);
+  border-radius: var(--radius-md) var(--radius-md) 0 0;
+}
+
+/* Leader rows */
+.lb-list {
+  padding: 0;
+  overflow: hidden;
+  margin-bottom: var(--space-xl);
+}
+
+.leader-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  padding: var(--space-md) var(--space-lg);
+  border-bottom: 1px solid var(--border-subtle);
+  transition: background var(--transition-fast);
+}
+.leader-row:last-child { border-bottom: none; }
+.leader-row:hover { background: var(--bg-hover); }
+.leader-row--me { background: rgba(108, 99, 255, 0.06) !important; }
+.leader-row--top { background: rgba(255,179,71,0.03); }
+
+.leader-row__pos {
+  width: 32px; text-align: center;
+  font-size: 1.1rem;
+  flex-shrink: 0;
+}
+
+.leader-row__avatar {
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.9rem; font-weight: 700;
+  flex-shrink: 0;
+}
+
+.leader-row__info { flex: 1; min-width: 0; }
+
+.leader-row__stats {
+  display: flex;
+  gap: var(--space-lg);
+  align-items: center;
+}
+
+.leader-row__stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  text-align: center;
+}
+
+.rank-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+  font-size: 0.7rem;
+  font-weight: 600;
+}
+
+/* XP Guide */
+.lb-xp-grid {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.lb-xp-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  padding: var(--space-sm) var(--space-md);
+  background: var(--bg-elevated);
+  border-radius: var(--radius-md);
+}
+
+/* ── Period Toggle ──────────────────────────────── */
+.lb-period-toggle {
+  display: flex;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-full);
+  padding: 3px;
+  gap: 2px;
+  flex-shrink: 0;
+}
+.lb-period-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 0.8rem;
+  font-weight: 500;
+  padding: 6px 14px;
+  border-radius: var(--radius-full);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  white-space: nowrap;
+}
+.lb-period-btn.active {
+  background: var(--primary);
+  color: white;
+  box-shadow: 0 2px 8px rgba(108, 99, 255, 0.4);
+}
+.lb-period-btn:not(.active):hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+/* ── Monthly Reset Banner ──────────────────────── */
+.lb-monthly-banner {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-sm) var(--space-md);
+  background: linear-gradient(90deg, rgba(108, 99, 255, 0.08), rgba(67, 217, 173, 0.08));
+  border-bottom: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md) var(--radius-md) 0 0;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+
+/* ── Share Victory Button ──────────────────────── */
+.share-victory-btn {
+  background: linear-gradient(135deg, #43D9AD, #2bb88a) !important;
+  color: white !important;
+  border-color: transparent !important;
+  font-weight: 600;
+  animation: victory-pulse 2s ease-in-out infinite;
+}
+@keyframes victory-pulse {
+  0%, 100% { box-shadow: 0 0 8px rgba(67, 217, 173, 0.3); }
+  50%       { box-shadow: 0 0 20px rgba(67, 217, 173, 0.6); }
+}

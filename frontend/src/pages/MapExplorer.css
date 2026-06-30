@@ -1,0 +1,220 @@
+.map-page {
+  display: flex;
+  height: 100vh;
+  padding-top: 64px;
+  overflow: hidden;
+}
+
+/* ── Sidebar ──────────────────────────────── */
+.map-sidebar {
+  width: 320px;
+  flex-shrink: 0;
+  background: var(--bg-surface);
+  border-right: 1px solid var(--border-subtle);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  overflow-y: auto;
+  padding: var(--space-lg);
+  transition: transform var(--transition-base), width var(--transition-base);
+  z-index: 10;
+}
+
+.map-sidebar:not(.open) {
+  width: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
+.map-sidebar__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* Stats */
+.map-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-sm);
+}
+
+.map-stat-chip {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: var(--space-sm);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  text-align: center;
+}
+
+/* Legend */
+.map-legend {
+  padding: var(--space-md);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+}
+
+.map-legend__item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: 5px 0;
+}
+
+.map-legend__dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+/* Style switcher */
+.map-style-switcher {
+  padding: var(--space-md);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+}
+
+.map-style-btn {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 6px var(--space-sm);
+  border-radius: var(--radius-sm);
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.map-style-btn:hover,
+.map-style-btn.active {
+  background: var(--primary-glow);
+  color: var(--primary-light);
+}
+
+/* Issue list */
+.map-issue-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+  overflow-y: auto;
+}
+
+.map-issue-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-sm) var(--space-md);
+  border-radius: var(--radius-md);
+  border: 1px solid transparent;
+  background: none;
+  cursor: pointer;
+  text-align: left;
+  transition: all var(--transition-fast);
+  width: 100%;
+}
+
+.map-issue-item:hover {
+  background: var(--bg-hover);
+}
+
+.map-issue-item.active {
+  background: var(--primary-glow);
+  border-color: var(--border-emphasis);
+}
+
+.map-issue-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+/* ── Map Container ────────────────────────── */
+.map-container {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+}
+
+.map-open-sidebar {
+  position: absolute;
+  top: var(--space-md);
+  left: var(--space-md);
+  z-index: 1000;
+}
+
+/* Zoom controls */
+.map-zoom-controls {
+  position: absolute;
+  bottom: var(--space-xl);
+  right: var(--space-md);
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.map-ctrl-btn {
+  width: 36px;
+  height: 36px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: var(--shadow-md);
+  transition: all var(--transition-fast);
+}
+.map-ctrl-btn:hover {
+  background: var(--primary-glow);
+  border-color: var(--primary);
+  color: var(--primary-light);
+}
+
+/* Popup override */
+.leaflet-popup-content-wrapper {
+  background: var(--bg-elevated) !important;
+  border: 1px solid var(--border-default) !important;
+  border-radius: var(--radius-lg) !important;
+  box-shadow: var(--shadow-lg) !important;
+  color: var(--text-primary) !important;
+}
+
+.leaflet-popup-tip { background: var(--bg-elevated) !important; }
+
+.map-popup__content {
+  min-width: 200px;
+}
+
+.map-popup__img {
+  width: 100%;
+  height: 100px;
+  object-fit: cover;
+  border-radius: var(--radius-md);
+  margin-bottom: 8px;
+}
+
+@media (max-width: 768px) {
+  .map-page { flex-direction: column; }
+  .map-sidebar {
+    width: 100%;
+    max-height: 40vh;
+    border-right: none;
+    border-bottom: 1px solid var(--border-subtle);
+  }
+}

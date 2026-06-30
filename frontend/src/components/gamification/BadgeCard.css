@@ -1,0 +1,347 @@
+/* ══════════════════════════════════════════════════
+   BadgeCard — Gamification Badge Component Styles
+   Glassmorphism dark UI · Prastab Design System
+   ══════════════════════════════════════════════════ */
+
+/* ── Shimmer keyframe ────────────────────────────── */
+@keyframes badge-shimmer {
+  0%   { background-position: -200% center; }
+  100% { background-position:  200% center; }
+}
+
+/* ── Glow pulse ──────────────────────────────────── */
+@keyframes badge-glow-pulse {
+  0%, 100% { opacity: 0.55; transform: scale(1);    }
+  50%       { opacity: 0.85; transform: scale(1.12); }
+}
+
+/* ── Emoji bounce on hover ───────────────────────── */
+@keyframes badge-emoji-bounce {
+  0%, 100% { transform: scale(1)    rotate(0deg);  }
+  30%       { transform: scale(1.25) rotate(-6deg); }
+  60%       { transform: scale(1.15) rotate(4deg);  }
+}
+
+/* ── Earned-shimmer across the emoji ─────────────── */
+@keyframes badge-earned-shimmer {
+  0%   { background-position: -300% center; }
+  100% { background-position:  300% center; }
+}
+
+/* ── Appear animation ────────────────────────────── */
+@keyframes badge-appear {
+  from { opacity: 0; transform: scale(0.85) translateY(6px); }
+  to   { opacity: 1; transform: scale(1)    translateY(0);   }
+}
+
+/* ══════════════════════════════════════════════════
+   Base card
+   ══════════════════════════════════════════════════ */
+.badge-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  background: rgba(22, 27, 34, 0.72);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-radius: 14px;
+  border: 1.5px solid rgba(255, 255, 255, 0.09);
+  overflow: hidden;
+  cursor: default;
+  transition:
+    transform 250ms cubic-bezier(0.175, 0.885, 0.32, 1.275),
+    box-shadow 250ms ease,
+    border-color 250ms ease;
+  animation: badge-appear 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275) both;
+  text-align: center;
+  user-select: none;
+}
+
+/* ══════════════════════════════════════════════════
+   Size variants
+   ══════════════════════════════════════════════════ */
+.badge-card--sm {
+  width: 80px;
+  min-height: 96px;
+  padding: 10px 6px 8px;
+  gap: 4px;
+  border-radius: 12px;
+}
+
+.badge-card--md {
+  width: 160px;
+  min-height: 200px;
+  padding: 20px 14px 16px;
+}
+
+.badge-card--lg {
+  width: 220px;
+  min-height: 260px;
+  padding: 28px 20px 22px;
+}
+
+/* ══════════════════════════════════════════════════
+   Glow layer (renders behind content via z-index)
+   ══════════════════════════════════════════════════ */
+.badge-card__glow {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: radial-gradient(
+    ellipse 70% 60% at 50% 0%,
+    color-mix(in srgb, var(--badge-color) 28%, transparent),
+    transparent 70%
+  );
+  pointer-events: none;
+  z-index: 0;
+  transition: opacity 250ms ease;
+}
+
+/* ══════════════════════════════════════════════════
+   Emoji container
+   ══════════════════════════════════════════════════ */
+.badge-card__emoji {
+  position: relative;
+  z-index: 1;
+  line-height: 1;
+  transition: transform 250ms cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.badge-card--sm  .badge-card__emoji { font-size: 1.7rem; }
+.badge-card--md  .badge-card__emoji { font-size: 2.6rem; }
+.badge-card--lg  .badge-card__emoji { font-size: 3.4rem; }
+
+/* ══════════════════════════════════════════════════
+   Text body
+   ══════════════════════════════════════════════════ */
+.badge-card__body {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  width: 100%;
+}
+
+.badge-card__name {
+  font-family: 'Space Grotesk', 'Inter', sans-serif;
+  font-weight: 700;
+  color: #E6EDF3;
+  line-height: 1.2;
+}
+
+.badge-card--sm .badge-card__name  { font-size: 0.58rem; }
+.badge-card--md .badge-card__name  { font-size: 0.82rem; }
+.badge-card--lg .badge-card__name  { font-size: 1rem;    }
+
+.badge-card__hindi {
+  font-size: 0.62rem;
+  color: rgba(255, 255, 255, 0.45);
+  letter-spacing: 0.02em;
+}
+
+.badge-card--sm .badge-card__hindi { font-size: 0.52rem; }
+
+.badge-card__desc {
+  font-size: 0.72rem;
+  color: #8B949E;
+  line-height: 1.4;
+  margin-top: 4px;
+}
+
+/* ══════════════════════════════════════════════════
+   Footer row
+   ══════════════════════════════════════════════════ */
+.badge-card__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
+  gap: 4px;
+}
+
+.badge-card__tier {
+  font-size: 0.62rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.35);
+}
+
+.badge-card__xp {
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--badge-color) 18%, transparent);
+  color: var(--badge-color);
+  border: 1px solid color-mix(in srgb, var(--badge-color) 35%, transparent);
+}
+
+.badge-card__locked-label {
+  font-size: 0.62rem;
+  color: rgba(255, 255, 255, 0.25);
+  letter-spacing: 0.02em;
+}
+
+/* ══════════════════════════════════════════════════
+   EARNED state
+   ══════════════════════════════════════════════════ */
+.badge-card--earned {
+  border-color: color-mix(in srgb, var(--badge-color) 38%, transparent);
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--badge-color) 12%, transparent),
+    0 4px 20px rgba(0, 0, 0, 0.5),
+    0 0 28px color-mix(in srgb, var(--badge-color) 18%, transparent);
+}
+
+.badge-card--earned .badge-card__glow {
+  animation: badge-glow-pulse 3s ease-in-out infinite;
+}
+
+/* Shimmer on earned emoji */
+.badge-card--earned .badge-card__emoji::after {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  background: linear-gradient(
+    105deg,
+    transparent 30%,
+    rgba(255, 255, 255, 0.22) 50%,
+    transparent 70%
+  );
+  background-size: 300% auto;
+  border-radius: 50%;
+  animation: badge-earned-shimmer 3.5s linear infinite;
+  pointer-events: none;
+}
+
+/* ══════════════════════════════════════════════════
+   LOCKED state
+   ══════════════════════════════════════════════════ */
+.badge-card--locked {
+  border-style: dashed;
+  border-color: rgba(255, 255, 255, 0.12);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.35);
+  opacity: 0.72;
+}
+
+.badge-card--locked .badge-card__glow {
+  opacity: 0.15;
+}
+
+.badge-card--locked .badge-card__name {
+  color: rgba(255, 255, 255, 0.4);
+}
+
+/* ══════════════════════════════════════════════════
+   Tier frame styles (border accent)
+   ══════════════════════════════════════════════════ */
+
+/* Bronze — Tier 1 */
+.badge-card--frame-bronze.badge-card--earned {
+  border-color: rgba(205, 127, 50, 0.5);
+  box-shadow:
+    0 0 0 1px rgba(205, 127, 50, 0.12),
+    0 4px 20px rgba(0, 0, 0, 0.5),
+    0 0 24px color-mix(in srgb, var(--badge-color) 20%, transparent);
+}
+
+/* Silver — Tier 2 */
+.badge-card--frame-silver.badge-card--earned {
+  border-color: rgba(192, 192, 192, 0.5);
+  box-shadow:
+    0 0 0 1px rgba(192, 192, 192, 0.1),
+    0 4px 20px rgba(0, 0, 0, 0.5),
+    0 0 28px color-mix(in srgb, var(--badge-color) 22%, transparent);
+}
+
+/* Gold — Tier 3 */
+.badge-card--frame-gold.badge-card--earned {
+  border-color: rgba(255, 179, 71, 0.55);
+  box-shadow:
+    0 0 0 1px rgba(255, 179, 71, 0.12),
+    0 4px 24px rgba(0, 0, 0, 0.55),
+    0 0 36px color-mix(in srgb, var(--badge-color) 28%, transparent);
+}
+
+.badge-card--frame-gold.badge-card--earned::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(
+    135deg,
+    rgba(255, 215, 0, 0.04) 0%,
+    transparent 50%,
+    rgba(255, 179, 71, 0.04) 100%
+  );
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Platinum — Tier 4 */
+.badge-card--frame-platinum.badge-card--earned {
+  border-color: rgba(255, 77, 109, 0.6);
+  box-shadow:
+    0 0 0 1px rgba(255, 77, 109, 0.15),
+    0 6px 32px rgba(0, 0, 0, 0.6),
+    0 0 48px color-mix(in srgb, var(--badge-color) 32%, transparent),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+.badge-card--frame-platinum.badge-card--earned .badge-card__name {
+  background: linear-gradient(135deg, #FFD700, #FF8C42, #FF4D6D);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ══════════════════════════════════════════════════
+   Hover interactions
+   ══════════════════════════════════════════════════ */
+.badge-card:hover {
+  transform: scale(1.05) translateY(-2px);
+}
+
+.badge-card--earned:hover {
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--badge-color) 50%, transparent),
+    0 8px 32px rgba(0, 0, 0, 0.65),
+    0 0 48px color-mix(in srgb, var(--badge-color) 30%, transparent);
+}
+
+.badge-card:hover .badge-card__emoji {
+  animation: badge-emoji-bounce 0.5s ease both;
+}
+
+.badge-card:hover .badge-card__glow {
+  opacity: 1;
+}
+
+/* ══════════════════════════════════════════════════
+   Staggered appear for grid use
+   ══════════════════════════════════════════════════ */
+.badge-card:nth-child(1)  { animation-delay: 0.04s; }
+.badge-card:nth-child(2)  { animation-delay: 0.08s; }
+.badge-card:nth-child(3)  { animation-delay: 0.12s; }
+.badge-card:nth-child(4)  { animation-delay: 0.16s; }
+.badge-card:nth-child(5)  { animation-delay: 0.20s; }
+.badge-card:nth-child(6)  { animation-delay: 0.24s; }
+
+/* ══════════════════════════════════════════════════
+   Responsive
+   ══════════════════════════════════════════════════ */
+@media (max-width: 480px) {
+  .badge-card--md {
+    width: 130px;
+    min-height: 170px;
+    padding: 16px 10px 12px;
+  }
+}

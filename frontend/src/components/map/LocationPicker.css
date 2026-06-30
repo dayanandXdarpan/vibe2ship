@@ -1,0 +1,42 @@
+.location-picker {
+  width: 100%;
+}
+
+.location-picker__map {
+  position: relative;
+  height: 320px;
+  border-radius: var(--radius-xl);
+  overflow: hidden;
+  border: 1px solid var(--border-default);
+}
+
+.location-picker__gps-btn {
+  position: absolute;
+  bottom: var(--space-md);
+  right: var(--space-md);
+  z-index: 1000;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-md);
+  background: var(--bg-surface);
+  border: 1px solid var(--border-default);
+  color: var(--primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: var(--shadow-md);
+  transition: all var(--transition-fast);
+}
+.location-picker__gps-btn:hover {
+  background: var(--primary-glow);
+  border-color: var(--primary);
+}
+.location-picker__gps-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Leaflet overrides */
+.leaflet-container { background: var(--bg-base); }
+.leaflet-tile { filter: brightness(0.85) saturate(0.9); }

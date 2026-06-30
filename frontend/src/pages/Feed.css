@@ -1,0 +1,279 @@
+.feed-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--space-md);
+}
+
+.feed-toolbar {
+  display: flex;
+  gap: var(--space-sm);
+  align-items: center;
+  margin-bottom: var(--space-md);
+  flex-wrap: wrap;
+}
+
+.feed-search {
+  position: relative;
+  flex: 1;
+  min-width: 200px;
+}
+.feed-search__icon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-muted);
+  pointer-events: none;
+}
+.feed-search__input { padding-left: 38px !important; }
+
+.feed-filters {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-md);
+  padding: var(--space-lg);
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  margin-bottom: var(--space-md);
+}
+
+.feed-insight-bar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: 10px var(--space-md);
+  background: linear-gradient(135deg, rgba(108,99,255,0.08), rgba(108,99,255,0.03));
+  border: 1px solid rgba(108,99,255,0.2);
+  border-radius: var(--radius-lg);
+  margin-bottom: var(--space-lg);
+}
+
+.feed-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: var(--space-md);
+}
+
+/* ── Issue Card ───────────────────────────── */
+.issue-card {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding: 0;
+  text-decoration: none;
+  color: inherit;
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast), border-color var(--transition-fast);
+}
+.issue-card:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-lg);
+  border-color: var(--border-default);
+}
+
+.issue-card__media {
+  position: relative;
+  height: 160px;
+  overflow: hidden;
+  background: var(--bg-elevated);
+}
+.issue-card__media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform var(--transition-slow);
+}
+.issue-card:hover .issue-card__media img { transform: scale(1.04); }
+
+.issue-card__media-placeholder {
+  height: 120px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-elevated);
+}
+
+.issue-card__sev-badge {
+  position: absolute;
+  top: var(--space-sm);
+  right: var(--space-sm);
+}
+
+.issue-card__body {
+  padding: var(--space-md);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  flex: 1;
+}
+
+.issue-card__category {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: capitalize;
+}
+
+.issue-card__desc {
+  font-size: 0.85rem;
+  color: var(--text-primary);
+  line-height: 1.5;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.issue-card__location {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--text-muted);
+}
+
+.issue-card__footer {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  margin-top: auto;
+  padding-top: var(--space-sm);
+  border-top: 1px solid var(--border-subtle);
+}
+
+.issue-card__action {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: color var(--transition-fast);
+  padding: 4px;
+  border-radius: var(--radius-sm);
+}
+button.issue-card__action:hover {
+  color: var(--primary-light);
+  background: var(--primary-glow);
+}
+
+.issue-card__time {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  margin-left: auto;
+}
+
+/* ── Empty State ──────────────────────────── */
+.feed-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-md);
+  padding: var(--space-3xl);
+  text-align: center;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-xl);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .feed-filters { grid-template-columns: 1fr; }
+}
+
+/* ── Sort Mode Tabs ──────────────────────────────────────────── */
+.feed-sort-tabs {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  margin-bottom: var(--space-md);
+  flex-wrap: wrap;
+}
+
+.feed-sort-tab {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 14px;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--border-default);
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 0.8rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  position: relative;
+}
+.feed-sort-tab:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+  border-color: var(--border-emphasis);
+}
+.feed-sort-tab--active {
+  background: var(--primary-glow);
+  color: var(--primary-light);
+  border-color: rgba(108, 99, 255, 0.4);
+}
+
+.feed-sort-badge {
+  padding: 1px 5px;
+  border-radius: 4px;
+  background: linear-gradient(135deg, #6C63FF, #43D9AD);
+  color: white;
+  font-size: 0.6rem;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+}
+
+.feed-sort-formula {
+  color: var(--text-muted);
+  font-size: 0.7rem;
+  font-family: var(--font-mono, monospace);
+  padding: 4px 10px;
+  background: var(--bg-elevated);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-subtle);
+}
+
+.feed-sort-spinner {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border: 1.5px solid rgba(108, 99, 255, 0.3);
+  border-top-color: var(--primary);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+
+/* ── Urgency Weight Indicator on Cards ──────────────────────── */
+.issue-card__urgency {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  color: var(--warning);
+  font-size: 0.72rem;
+  font-weight: 700;
+  position: relative;
+  padding: 2px 6px;
+  border-radius: var(--radius-sm);
+  background: rgba(255, 179, 71, 0.08);
+  border: 1px solid rgba(255, 179, 71, 0.2);
+  overflow: hidden;
+}
+
+.issue-card__urgency-bar {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  background: rgba(255, 179, 71, 0.15);
+  transition: width 0.6s ease;
+  pointer-events: none;
+}

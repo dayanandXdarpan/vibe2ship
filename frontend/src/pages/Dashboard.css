@@ -1,0 +1,169 @@
+.dash-page { padding-bottom: var(--space-3xl); }
+
+/* KPI Cards */
+.dash-kpis {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--space-md);
+  margin-bottom: var(--space-xl);
+}
+
+.dash-stat-card {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-md);
+  position: relative;
+  overflow: hidden;
+}
+
+.dash-stat-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, transparent 60%, rgba(255,255,255,0.02));
+}
+
+.dash-stat-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.dash-stat-trend {
+  position: absolute;
+  top: var(--space-md);
+  right: var(--space-md);
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+.dash-stat-trend.up { color: var(--success); }
+.dash-stat-trend.down { color: var(--danger); }
+.dash-stat-trend.down svg { transform: rotate(180deg); }
+
+/* Charts */
+.dash-charts {
+  display: grid;
+  grid-template-columns: 1fr 280px 1fr;
+  gap: var(--space-md);
+  margin-bottom: var(--space-xl);
+}
+
+.dash-chart-card { min-height: 280px; }
+.dash-chart-card--sm { min-height: 280px; }
+
+/* Insights */
+.dash-insights__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-lg);
+  flex-wrap: wrap;
+  gap: var(--space-md);
+}
+
+.dash-insights__grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-md);
+}
+
+.dash-insight-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.dash-insight-card:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-primary);
+}
+
+.dash-insight-action {
+  padding: var(--space-sm) var(--space-md);
+  background: var(--bg-elevated);
+  border-radius: var(--radius-md);
+  margin-top: auto;
+}
+
+/* Responsive */
+@media (max-width: 1100px) {
+  .dash-charts { grid-template-columns: 1fr 1fr; }
+  .dash-chart-card:last-child { grid-column: 1 / -1; }
+  .dash-insights__grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 768px) {
+  .dash-kpis { grid-template-columns: repeat(2, 1fr); }
+  .dash-charts { grid-template-columns: 1fr; }
+  .dash-insights__grid { grid-template-columns: 1fr; }
+  .dash-hotspot-grid { grid-template-columns: 1fr; }
+}
+
+/* ── Regional Priority Zones (K-Means Hotspots) ──── */
+.dash-hotspots {
+  margin-bottom: var(--space-xl);
+}
+
+.dash-hotspot-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-md);
+}
+
+.dash-hotspot-card {
+  display: flex;
+  gap: var(--space-md);
+  align-items: flex-start;
+  transition: transform var(--transition-fast);
+}
+.dash-hotspot-card:hover {
+  transform: translateY(-2px);
+}
+
+.dash-hotspot-badge {
+  padding: 4px 10px;
+  border-radius: var(--radius-sm);
+  font-size: 0.65rem;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  border: 1px solid;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.dash-hotspot-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.dash-hotspot-stats {
+  display: flex;
+  gap: var(--space-sm);
+  flex-wrap: wrap;
+}
+.dash-hotspot-stats span {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.dash-hotspot-bar {
+  height: 4px;
+  background: var(--bg-elevated);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+}
+.dash-hotspot-fill {
+  height: 100%;
+  border-radius: var(--radius-full);
+  transition: width 0.8s ease;
+}

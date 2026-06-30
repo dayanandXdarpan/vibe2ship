@@ -1,0 +1,371 @@
+.landing {
+  overflow-x: hidden;
+}
+
+/* ── Hero ─────────────────────────────────── */
+.landing__hero {
+  position: relative;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  padding: 120px 0 80px;
+  overflow: hidden;
+}
+
+.landing__hero-bg {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.landing__hero-grid {
+  position: absolute;
+  inset: 0;
+  background-image: 
+    linear-gradient(rgba(108,99,255,0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(108,99,255,0.05) 1px, transparent 1px);
+  background-size: 48px 48px;
+  mask-image: radial-gradient(ellipse 80% 80% at 50% 50%, black 40%, transparent 100%);
+}
+
+.landing__hero-glow {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  opacity: 0.4;
+  animation: float 6s ease-in-out infinite;
+}
+
+.landing__hero-glow--1 {
+  width: 500px;
+  height: 500px;
+  background: radial-gradient(circle, rgba(108,99,255,0.4), transparent);
+  top: -100px;
+  left: -100px;
+}
+
+.landing__hero-glow--2 {
+  width: 400px;
+  height: 400px;
+  background: radial-gradient(circle, rgba(67,217,173,0.3), transparent);
+  bottom: 0;
+  right: -50px;
+  animation-delay: -3s;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(-20px) scale(1.05); }
+}
+
+.landing__hero-content {
+  position: relative;
+  z-index: 1;
+  max-width: 800px;
+}
+
+.landing__badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 16px;
+  background: rgba(67, 217, 173, 0.1);
+  border: 1px solid rgba(67, 217, 173, 0.25);
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--success);
+  margin-bottom: var(--space-lg);
+}
+
+.landing__title {
+  margin-bottom: var(--space-lg);
+  line-height: 1.05;
+}
+
+.landing__subtitle {
+  max-width: 560px;
+  color: var(--text-secondary);
+  margin-bottom: var(--space-xl);
+}
+
+.landing__cta {
+  display: flex;
+  gap: var(--space-md);
+  flex-wrap: wrap;
+  margin-bottom: var(--space-2xl);
+}
+
+/* Live stats */
+.landing__stats {
+  display: flex;
+  align-items: center;
+  gap: var(--space-lg);
+  padding: var(--space-lg) var(--space-xl);
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-xl);
+  width: fit-content;
+  flex-wrap: wrap;
+}
+
+.landing__stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.landing__stat-value {
+  font-family: var(--font-display);
+  font-size: 1.75rem;
+  font-weight: 800;
+  line-height: 1;
+  color: var(--text-primary);
+}
+
+.landing__stat-label {
+  font-size: 0.72rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.landing__stat-divider {
+  width: 1px;
+  height: 40px;
+  background: var(--border-subtle);
+}
+
+/* ── Section Shared ───────────────────────── */
+.landing__section-header {
+  text-align: center;
+  margin-bottom: var(--space-2xl);
+}
+
+.landing__section-header h2 { margin: var(--space-sm) 0; }
+
+/* ── Agent Pipeline ───────────────────────── */
+.landing__agents {
+  padding: var(--space-3xl) 0;
+}
+
+.landing__pipeline {
+  display: flex;
+  gap: var(--space-md);
+  align-items: stretch;
+  flex-wrap: wrap;
+  position: relative;
+}
+
+.landing__agent-card {
+  flex: 1;
+  min-width: 220px;
+  padding: var(--space-lg);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  position: relative;
+  transition: transform var(--transition-base), box-shadow var(--transition-base);
+}
+
+.landing__agent-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-primary);
+}
+
+.landing__agent-icon {
+  font-size: 2rem;
+  margin-bottom: var(--space-xs);
+}
+
+.landing__agent-arrow {
+  position: absolute;
+  right: -20px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 1.5rem;
+  color: var(--primary);
+  z-index: 2;
+  font-weight: 700;
+}
+
+/* ── Categories ───────────────────────────── */
+.landing__categories {
+  padding: var(--space-2xl) 0;
+}
+
+.landing__cat-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+  justify-content: center;
+}
+
+.landing__cat-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: 10px 20px;
+  border-radius: var(--radius-full);
+  border: 1px solid;
+  font-size: 0.9rem;
+  transition: transform var(--transition-fast);
+  cursor: default;
+}
+
+.landing__cat-chip:hover {
+  transform: translateY(-2px);
+}
+
+/* ── Features ─────────────────────────────── */
+.landing__features {
+  padding: var(--space-2xl) 0;
+}
+
+.landing__feature-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.landing__feature-icon {
+  font-size: 2rem;
+  margin-bottom: var(--space-xs);
+}
+
+/* ── CTA Banner ───────────────────────────── */
+.landing__cta-banner {
+  background: linear-gradient(135deg, rgba(108,99,255,0.15), rgba(67,217,173,0.1));
+  border-top: 1px solid var(--border-subtle);
+  border-bottom: 1px solid var(--border-subtle);
+  padding: var(--space-3xl) 0;
+  margin: var(--space-2xl) 0 0;
+}
+
+.landing__cta-banner-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-xl);
+  flex-wrap: wrap;
+}
+
+/* ── Footer ───────────────────────────────── */
+.landing__footer {
+  padding: var(--space-xl) 0;
+  border-top: 1px solid var(--border-subtle);
+}
+
+.landing__footer-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--space-md);
+}
+
+.landing__logo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .landing__hero { padding: 100px 0 60px; }
+  .landing__title { font-size: 2.5rem; }
+  .landing__stats { gap: var(--space-md); padding: var(--space-md); }
+  .landing__stat-value { font-size: 1.4rem; }
+  .landing__pipeline { flex-direction: column; }
+  .landing__agent-arrow { display: none; }
+  .landing__cta-banner-inner { flex-direction: column; text-align: center; }
+  .landing__footer-inner { flex-direction: column; text-align: center; }
+  .landing__pillars-grid { grid-template-columns: 1fr; }
+}
+
+/* ── Prastab Brand ─────────────────────────── */
+.landing__brand {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  margin-bottom: var(--space-lg);
+}
+
+.landing__brand-logo {
+  width: 56px;
+  height: 56px;
+  border-radius: var(--radius-lg);
+  background: linear-gradient(135deg, #6C63FF, #43D9AD);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.4rem;
+  font-family: 'Noto Sans Devanagari', 'Mangal', serif;
+  color: #fff;
+  font-weight: 900;
+  box-shadow: 0 8px 24px rgba(108,99,255,0.4);
+  flex-shrink: 0;
+}
+
+.landing__brand-name {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.1;
+}
+.landing__brand-name .gradient-text {
+  font-size: 2.2rem;
+  font-weight: 900;
+  letter-spacing: -0.02em;
+}
+
+.landing__brand-devanagari {
+  font-size: 1rem;
+  color: var(--text-muted);
+  font-family: 'Noto Sans Devanagari', 'Mangal', serif;
+  letter-spacing: 0.04em;
+}
+
+/* ── Three Pillars ─────────────────────────── */
+.landing__pillars {
+  padding: var(--space-3xl) 0;
+}
+
+.landing__pillars-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-lg);
+  margin-top: var(--space-xl);
+}
+
+.landing__pillar-card {
+  padding: var(--space-xl);
+  text-align: center;
+  position: relative;
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+}
+.landing__pillar-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 16px 40px rgba(108,99,255,0.15);
+}
+
+.landing__pillar-num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-full);
+  border: 2px solid;
+  font-size: 0.75rem;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  margin: 0 auto var(--space-sm);
+}
+
+.landing__pillar-icon {
+  font-size: 2.2rem;
+  margin-bottom: var(--space-sm);
+}
