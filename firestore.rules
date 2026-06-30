@@ -95,7 +95,7 @@ service cloud.firestore {
     match /users/{userId} {
       // Users can read their own profile; authorities see all
       allow read: if isSignedIn() && (
-        isOwner(userId) || isAuthority()
+        isOwner(userId) || (userId != request.auth.uid && isAuthority())
       );
 
       // Only the owner creates/updates their profile
