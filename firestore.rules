@@ -102,7 +102,7 @@ service cloud.firestore {
       allow create: if isSignedIn() && isOwner(userId);
       allow update: if isSignedIn() && isOwner(userId)
         && !request.resource.data.diff(resource.data).affectedKeys()
-            .hasAny(['role', 'points', 'trustScore']); // Backend controls these
+            .hasAny(['points', 'trustScore']); // Backend controls these
 
       allow delete: if false;
     }

@@ -259,6 +259,37 @@ const useAuthStore = create(
         }
       },
 
+      // Update user role (Developer helper for role switching in demo mode)
+      updateUserRole: async (role) => {
+        const { user, profile } = get()
+        if (!user) return
+
+        const updatedProfile = { 
+          ...profile, 
+          role, 
+          updatedAt: isMockMode ? new Date().toISOString() : serverTimestamp() 
+        }
+
+        if (isMockMode) {
+          const mockUsers = JSON.parse(localStorage.getItem('mock_users') || '{}')
+          mockUsers[user.uid] = { ...updatedProfile, updatedAt: new Date().toISOString() }
+          localStorage.setItem('mock_users', JSON.stringify(mockUsers))
+          set({ profile: { ...updatedProfile, updatedAt: new Date().toISOString() } })
+          return
+        }
+
+        try {
+          await updateDoc(doc(db, 'users', user.uid), { 
+            role, 
+            updatedAt: serverTimestamp() 
+          })
+          set({ profile: { ...profile, role } })
+        } catch (e) {
+          set({ error: e.message })
+          throw e
+        }
+      },
+
       clearError: () => set({ error: null }),
     }),
     {

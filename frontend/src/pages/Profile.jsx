@@ -29,7 +29,7 @@ const SEV_COLORS = { 5:'#FF4D6D', 4:'#FF8C42', 3:'#FFB347', 2:'#43D9AD', 1:'#64B
 const STATUS_CHIP = { resolved:'chip--success', assigned:'chip--primary', in_progress:'chip--warning', in_review:'chip--warning', processing:'chip--info' }
 
 export default function Profile() {
-  const { user, profile, logout, updateUserProfile } = useAuthStore()
+  const { user, profile, logout, updateUserProfile, updateUserRole } = useAuthStore()
   const navigate = useNavigate()
   const [myIssues, setMyIssues] = useState([])
   const [loading, setLoading] = useState(true)
@@ -142,6 +142,34 @@ export default function Profile() {
                   {profile?.role === 'authority' && (
                     <span className="chip chip--warning">Authority</span>
                   )}
+                  {profile?.role === 'admin' && (
+                    <span className="chip chip--danger">Admin</span>
+                  )}
+                </div>
+                <div className="flex items-center gap-sm" style={{ marginTop: 'var(--space-md)' }}>
+                  <label className="caption" style={{ color: 'var(--text-muted)' }}>Demo Role Switcher:</label>
+                  <select 
+                    value={profile?.role || 'citizen'} 
+                    onChange={async (e) => {
+                      try {
+                        await updateUserRole(e.target.value)
+                      } catch (err) {
+                        alert("Failed to change role: " + err.message)
+                      }
+                    }}
+                    style={{
+                      padding: '4px 8px',
+                      background: 'var(--bg-elevated)',
+                      border: '1px solid var(--border-subtle)',
+                      borderRadius: 'var(--radius-md)',
+                      color: 'var(--text-primary)',
+                      fontSize: '0.875rem'
+                    }}
+                  >
+                    <option value="citizen">Citizen</option>
+                    <option value="authority">Authority (Reviewer)</option>
+                    <option value="admin">Super Admin</option>
+                  </select>
                 </div>
               </div>
               <div className="profile-actions-container">
